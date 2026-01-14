@@ -18,14 +18,13 @@ public class ReaderValidator : AbstractValidator<Reader>
         RuleFor(r => r.Address)
             .NotEmpty().WithMessage("Adresa este obligatorie.");
 
-        // Regula speciala: Macar telefon SAU email
         RuleFor(r => r)
-            .Must(r => !string.IsNullOrEmpty(r.PhoneNumber) || !string.IsNullOrEmpty(r.Email))
+            .Must(r => !string.IsNullOrWhiteSpace(r.PhoneNumber) || !string.IsNullOrWhiteSpace(r.Email))
             .WithMessage("Trebuie sa specificati cel putin o modalitate de contact (Telefon sau Email).");
 
-        // Validare format email (daca este completat)
         RuleFor(r => r.Email)
-            .EmailAddress().When(r => !string.IsNullOrEmpty(r.Email))
+            .Matches(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+            .When(r => !string.IsNullOrWhiteSpace(r.Email))
             .WithMessage("Formatul adresei de email este invalid.");
     }
 }

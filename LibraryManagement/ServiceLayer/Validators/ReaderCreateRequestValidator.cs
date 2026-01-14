@@ -3,9 +3,6 @@ using ServiceLayer.DTOs.Requests;
 
 namespace ServiceLayer.Validators;
 
-/// <summary>
-/// Validator pentru crearea unui cititor nou.
-/// </summary>
 public class ReaderCreateRequestValidator : AbstractValidator<ReaderCreateRequest>
 {
     public ReaderCreateRequestValidator()
@@ -22,13 +19,15 @@ public class ReaderCreateRequestValidator : AbstractValidator<ReaderCreateReques
         RuleFor(x => x.AccountId)
             .NotEmpty().WithMessage("ID-ul contului este obligatoriu.");
 
-        // Regula Pagina 1: Macar unul din: numar de telefon, adresa de email
+        // Macar unul: telefon sau email
         RuleFor(x => x)
-            .Must(x => !string.IsNullOrEmpty(x.PhoneNumber) || !string.IsNullOrEmpty(x.Email))
+            .Must(x => !string.IsNullOrWhiteSpace(x.PhoneNumber) || !string.IsNullOrWhiteSpace(x.Email))
             .WithMessage("Trebuie specificat cel putin un numar de telefon sau o adresa de email.");
 
+        // Email valid (daca e completat) - mai strict decat EmailAddress()
         RuleFor(x => x.Email)
-            .EmailAddress().When(x => !string.IsNullOrEmpty(x.Email))
+            .Matches(@"^[^@\s]+@[^@\s\.](?:[^@\s]*[^@\s\.])?\.[^@\s]+$")
+            .When(x => !string.IsNullOrWhiteSpace(x.Email))
             .WithMessage("Adresa de email nu are un format valid.");
     }
 }

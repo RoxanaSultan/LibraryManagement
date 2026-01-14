@@ -60,7 +60,7 @@ public class LoanService : ILoanService
         int availableNonReadingRoom = edition.CurrentStock - edition.ReadingRoomOnlyCount;
         double tenPercentInitial = edition.InitialStock * 0.1;
 
-        if (availableNonReadingRoom <= tenPercentInitial)
+        if (availableNonReadingRoom < tenPercentInitial)
         {
             _logger.LogWarning("Incalcare regula 10% stoc.");
             throw new InsufficientStockException("Nu se mai pot face imprumuturi. Trebuie sa ramana minim 10% din fondul initial.");
@@ -111,7 +111,8 @@ public class LoanService : ILoanService
         var loan = await _loanRepository.GetByIdAsync(request.LoanId)
             ?? throw new LibraryException("Imprumutul nu exista.");
 
-        var reader = await _readerRepository.GetByIdAsync(loan.ReaderId);
+        var reader = await _readerRepository.GetByIdAsync(loan.ReaderId)
+            ?? throw new LibraryException("Cititorul nu exista.");
 
         // Calcul prag LIM (Personal biblioteca)
         int limLimit = (int)(_settings.LIM * (reader.IsLibraryStaff ? 2.0 : 1.0));

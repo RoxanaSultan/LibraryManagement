@@ -69,7 +69,7 @@ namespace TestDomainModel.Validators
         [Fact]
         public void Should_Have_Error_When_Domain_Count_Exceeds_Limit()
         {
-            // Arrange - Limita este 3, noi punem 4
+            // Arrange
             var domains = new List<Domain>();
             for (int i = 0; i < 4; i++)
             {

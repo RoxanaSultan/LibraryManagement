@@ -860,4 +860,105 @@ public class LoanServiceTests
         Assert.NotNull(loan.ReturnDate);
         Assert.True(loan.ReturnDate >= before && loan.ReturnDate <= after);
     }
+
+    [Fact]
+    public async Task BorrowBookAsync_WhenStaff_UsesHalfPER_AndDoubleNMC_AllowsBorrow()
+    {
+        // Settings default: NMC=5, PER=30
+        // Staff => NMC=10, PER=15
+
+        var reader = Reader(id: 100, staff: true);
+        var edition = Edition(id: 200, bookId: 300, initial: 100, current: 80, readingOnly: 0);
+
+        SetupDefaultSettings();
+
+        _readerRepo.Setup(r => r.GetByIdAsync(reader.Id)).ReturnsAsync(reader);
+        _bookRepo.Setup(b => b.GetEditionByIdAsync(edition.Id)).ReturnsAsync(edition);
+
+        // today ok
+        _loanRepo.Setup(l => l.GetLoansInPeriodAsync(reader.Id, DateTime.Today, It.IsAny<DateTime>()))
+            .ReturnsAsync(Loans(0));
+
+        // capture startDate used for PER calculation
+        DateTime? capturedPerStart = null;
+        _loanRepo.Setup(l => l.GetLoansInPeriodAsync(
+                reader.Id,
+                It.Is<DateTime>(d => d.Date < DateTime.Today),
+                It.IsAny<DateTime>()))
+            .Callback<int, DateTime, DateTime>((_, start, __) => capturedPerStart = start)
+            .ReturnsAsync(Loans(6)); // non-staff would fail (6 > 5), staff should pass (6 <= 10)
+
+        _loanRepo.Setup(l => l.GetLastLoanForBookAsync(reader.Id, edition.BookId))
+            .ReturnsAsync((Loan)null!);
+
+        _mapper.Setup(m => m.Map<ServiceLayer.DTOs.Responses.LoanDetailsDto>(It.IsAny<Loan>()))
+            .Returns(new ServiceLayer.DTOs.Responses.LoanDetailsDto { Id = 1, DueDate = DateTime.Now.AddDays(14) });
+
+        var sut = CreateSut();
+
+        var dto = await sut.BorrowBookAsync(new BorrowRequest { ReaderId = reader.Id, EditionId = edition.Id });
+
+        Assert.NotNull(dto);
+        _loanRepo.Verify(l => l.AddAsync(It.IsAny<Loan>()), Times.Once);
+
+        // PER should be halved: start date ≈ today - 15 days (toleranță 1 zi pt. DateTime.Now/Today)
+        Assert.NotNull(capturedPerStart);
+        var expected = DateTime.Today.AddDays(-15);
+        Assert.True(
+            capturedPerStart!.Value.Date == expected.Date
+            || capturedPerStart!.Value.Date == expected.AddDays(-1).Date
+            || capturedPerStart!.Value.Date == expected.AddDays(1).Date);
+    }
+
+    [Fact]
+    public async Task BorrowBookAsync_WhenStaff_DeltaIsHalved_AllowsBorrowSooner()
+    {
+        // Settings default: DELTA=14
+        // Staff => DELTA=7
+        // Last loan was 8 days ago -> staff should be allowed (8 >= 7),
+        // while non-staff would be blocked (8 < 14).
+
+        var reader = Reader(id: 101, staff: true);
+        var edition = Edition(id: 201, bookId: 301, initial: 100, current: 80, readingOnly: 0);
+
+        var lastLoan = new Loan { LoanDate = DateTime.Now.AddDays(-8) };
+
+        SetupBorrowHappyPath(reader, edition, loansToday: 0, loansInPer: 0, lastLoanForBook: lastLoan);
+
+        var sut = CreateSut();
+
+        var dto = await sut.BorrowBookAsync(new BorrowRequest { ReaderId = reader.Id, EditionId = edition.Id });
+
+        Assert.NotNull(dto);
+        _loanRepo.Verify(l => l.AddAsync(It.IsAny<Loan>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExtendLoanAsync_WhenStaff_LimIsDoubled_AllowsExtension()
+    {
+        // Settings default: LIM=20
+        // Staff => LIM=40
+        // Total extensions last 3 months = 21; request 2 => 23
+        // Non-staff would fail (23 > 20), staff should pass (23 <= 40).
+
+        SetupDefaultSettings();
+
+        var reader = Reader(id: 202, staff: true);
+        var loan = new Loan { Id = 303, ReaderId = reader.Id, DueDate = DateTime.Now.AddDays(5) };
+
+        _loanRepo.Setup(l => l.GetByIdAsync(loan.Id)).ReturnsAsync(loan);
+        _readerRepo.Setup(r => r.GetByIdAsync(reader.Id)).ReturnsAsync(reader);
+
+        _loanRepo.Setup(l => l.GetTotalExtensionDaysInLastThreeMonthsAsync(reader.Id))
+            .ReturnsAsync(21);
+
+        var oldDue = loan.DueDate;
+
+        var sut = CreateSut();
+
+        await sut.ExtendLoanAsync(new ExtensionRequest { LoanId = loan.Id, DaysRequested = 2 });
+
+        Assert.Equal(oldDue.AddDays(2), loan.DueDate);
+        _loanRepo.Verify(l => l.UpdateAsync(It.Is<Loan>(x => x.Id == loan.Id)), Times.Once);
+    }
 }

@@ -64,7 +64,6 @@ public class BookServiceTests
     {
         _settings.SetupGet(s => s.DOMENII).Returns(5);
 
-        // Stiinta (1) -> Informatica (2) -> Baze de date (3)
         var science = new Domain { Id = 1, Name = "Stiinta" };
         var info = new Domain { Id = 2, Name = "Informatica", ParentDomainId = 1, ParentDomain = science };
         var db = new Domain { Id = 3, Name = "Baze de date", ParentDomainId = 2, ParentDomain = info };
@@ -72,8 +71,6 @@ public class BookServiceTests
         _domainRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(science);
         _domainRepository.Setup(r => r.GetByIdAsync(3)).ReturnsAsync(db);
 
-        // IMPORTANT: IsAncestor in service urca prin ParentDomain, dar apoi mai cere si din repo:
-        // current = potentialDescendant.ParentDomain -> info, apoi cere parintele lui info (science)
         _domainRepository.Setup(r => r.GetByIdAsync(2)).ReturnsAsync(info);
 
         var sut = CreateSut();
@@ -81,7 +78,7 @@ public class BookServiceTests
         var request = new BookCreateRequest
         {
             Title = "Bad",
-            DomainIds = new List<int> { 1, 3 } // stramos + descendent
+            DomainIds = new List<int> { 1, 3 }
         };
 
         await Assert.ThrowsAsync<DomainHierarchyException>(() => sut.AddBookAsync(request));
