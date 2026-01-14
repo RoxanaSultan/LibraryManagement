@@ -15,7 +15,6 @@ public class EditionTests
     {
         var edition = new Edition { CurrentStock = current, ReadingRoomOnlyCount = rrOnly };
 
-        // Calculam: Stoc curent - Exemplare sala lectura
         int actual = edition.CurrentStock - edition.ReadingRoomOnlyCount;
 
         Assert.Equal(expected, actual);

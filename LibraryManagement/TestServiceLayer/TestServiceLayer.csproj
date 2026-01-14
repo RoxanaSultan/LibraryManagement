@@ -7,7 +7,6 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RunSettingsFilePath>C:\Users\rsultan\source\repos\LibraryManagement\LibraryManagement\TestServiceLayer\bin\Debug\net8.0\fine-code-coverage\coverage-tool-output\TestServiceLayer-fcc-mscodecoverage-generated.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <ItemGroup>
