@@ -43,4 +43,18 @@ public class Book
         }
         return false;
     }
+
+    public IEnumerable<Domain> GetAllDomains()
+    {
+        var allDomains = new HashSet<Domain>();
+        foreach (var domain in ExplicitDomains)
+        {
+            allDomains.Add(domain);
+            foreach (var ancestor in domain.GetAllAncestors())
+            {
+                allDomains.Add(ancestor);
+            }
+        }
+        return allDomains;
+    }
 }
