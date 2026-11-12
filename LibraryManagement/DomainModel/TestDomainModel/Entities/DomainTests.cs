@@ -35,6 +35,7 @@ public class DomainTests
         Assert.Equal("Science", ancestors[0].Name);
     }
 
+    // Domeniile se pot împărți în subdomenii
     [Fact]
     public void DeepHierarchy_ShouldIdentifyAllAncestors()
     {

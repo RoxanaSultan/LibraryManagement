@@ -30,6 +30,7 @@ namespace TestDomainModel.Validators
             result.ShouldHaveValidationErrorFor(b => b.Title);
         }
 
+        // Fac parte din cel putin un domeniu;
         [Fact]
         public void Should_Have_Error_When_ExplicitDomains_Is_Empty()
         {
@@ -66,6 +67,7 @@ namespace TestDomainModel.Validators
             result.ShouldNotHaveValidationErrorFor(b => b.ExplicitDomains);
         }
 
+        // O carte nu poate avea mai mult de DOMENII domenii
         [Fact]
         public void Should_Have_Error_When_Domain_Count_Exceeds_Limit()
         {

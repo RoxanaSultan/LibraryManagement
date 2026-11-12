@@ -7,6 +7,7 @@ namespace TestDomainModel.Entities;
 /// </summary>
 public class EditionTests
 {
+    // Exemplare doar pentru sala de lectură
     [Theory]
     [InlineData(10, 0, 10)] // Toate disponibile
     [InlineData(10, 5, 5)]  // 5 disponibile, 5 de sala

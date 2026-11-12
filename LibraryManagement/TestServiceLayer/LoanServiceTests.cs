@@ -69,6 +69,7 @@ public class LoanServiceTests
         await Assert.ThrowsAsync<LibraryException>(() => sut.BorrowBookAsync(new BorrowRequest { ReaderId = 1, EditionId = 1 }));
     }
 
+    // Maxim NCZ cărți pe zi
     [Fact]
     public async Task BorrowBookAsync_WhenLoansTodayAtNCZ_Throws()
     {
@@ -107,6 +108,7 @@ public class LoanServiceTests
         await Assert.ThrowsAsync<LoanRuleViolationException>(() => sut.BorrowBookAsync(new BorrowRequest { ReaderId = reader.Id, EditionId = edition.Id }));
     }
 
+    // Maxim NMC cărți într-o perioadă PER
     [Fact]
     public async Task BorrowBookAsync_WhenLoansInPERAtNMC_Throws()
     {
@@ -131,6 +133,7 @@ public class LoanServiceTests
         await Assert.ThrowsAsync<LoanRuleViolationException>(() => sut.BorrowBookAsync(new BorrowRequest { ReaderId = reader.Id, EditionId = edition.Id }));
     }
 
+    // DELTA
     [Fact]
     public async Task BorrowBookAsync_WhenDeltaNotPassed_Throws()
     {
@@ -222,6 +225,7 @@ public class LoanServiceTests
         await Assert.ThrowsAsync<LibraryException>(() => sut.ExtendLoanAsync(new ExtensionRequest { LoanId = 1, DaysRequested = 3 }));
     }
 
+    // Perioadă determinată
     [Fact]
     public async Task ExtendLoanAsync_WhenTotalExtensionsExceedLim_Throws()
     {
@@ -632,6 +636,7 @@ public class LoanServiceTests
     }
 
     // 16
+    // NCZ ignorat pentru personal
     [Fact]
     public async Task BorrowBookAsync_WhenStaffLoansTodayExactlyPERSIMPMinus1_AllowsBorrow()
     {
@@ -649,6 +654,7 @@ public class LoanServiceTests
     }
 
     // 17
+    // Împrumut doar dacă nu toate sunt de sală și rămân ≥ 10% disponibile
     [Fact]
     public async Task BorrowBookAsync_WhenStockExactly10Percent_AllowsBorrow()
     {
@@ -861,6 +867,7 @@ public class LoanServiceTests
         Assert.True(loan.ReturnDate >= before && loan.ReturnDate <= after);
     }
 
+    // Praguri modificate pentru personal
     [Fact]
     public async Task BorrowBookAsync_WhenStaff_UsesHalfPER_AndDoubleNMC_AllowsBorrow()
     {

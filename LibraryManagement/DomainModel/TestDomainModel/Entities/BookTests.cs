@@ -116,6 +116,7 @@ public class BookTests
         Assert.False(result);
     }
 
+    // Nu se pot specifica explicit domenii aflate în relație strămoș–descendent
     [Fact]
     public void HasOverlappingDomains_WhenOneIsAncestorOfAnother_ReturnsTrue()
     {
